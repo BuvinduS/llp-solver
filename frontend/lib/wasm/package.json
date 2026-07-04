@@ -1,0 +1,15 @@
+{
+  "name": "solver-core",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "solver_core_bg.wasm",
+    "solver_core.js",
+    "solver_core.d.ts"
+  ],
+  "main": "solver_core.js",
+  "types": "solver_core.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
