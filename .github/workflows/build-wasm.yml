@@ -42,6 +42,14 @@ jobs:
         working-directory: solver-core
         run: wasm-pack build --target web --out-dir ../frontend/lib/wasm --out-name solver_core
 
+      - name: Remove wasm-pack's auto-generated .gitignore
+        # wasm-pack writes a `.gitignore` containing `*` into its output
+        # directory by default, assuming you don't want to commit the
+        # package. We DO want to commit it (that's the whole point of this
+        # workflow), so it has to go before `git add` runs -- otherwise
+        # git silently skips every new file in this directory.
+        run: rm -f frontend/lib/wasm/.gitignore
+
       - name: Commit compiled output back to the repo
         run: |
           git config user.name "github-actions[bot]"
