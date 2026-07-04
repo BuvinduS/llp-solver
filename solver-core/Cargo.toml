@@ -1,0 +1,31 @@
+[package]
+name = "solver-core"
+version = "0.1.0"
+edition = "2021"
+
+# Rust note: a crate normally builds one kind of artifact. We need two:
+# - "rlib": a normal Rust library, so `cargo test` and other Rust code
+#   (like our integration tests) can link against it on your native machine.
+# - "cdylib": a C-compatible dynamic library, which is the format
+#   wasm-bindgen/wasm-pack needs to produce the browser-loadable .wasm file.
+# Listing both means the same source compiles either way depending on target.
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# serde: (de)serialization framework. We use it to auto-generate the code
+# that converts our Rust structs to/from JSON-ish data, which is how we'll
+# hand results across the Rust <-> JavaScript boundary.
+serde = { version = "1", features = ["derive"] }
+
+# wasm-bindgen: generates the glue code that lets JS call Rust functions
+# and pass data back and forth. On a native (non-wasm32) build, most of
+# this crate compiles down to nothing -- it's only "active" when targeting
+# wasm32, which is why we can `cargo test` natively without the wasm32
+# target installed.
+wasm-bindgen = "0.2"
+
+# serde-wasm-bindgen: bridges serde's JSON-like (de)serialization directly
+# to JS values, so the wasm-facing function can accept/return plain JS
+# objects instead of raw bytes.
+serde-wasm-bindgen = "0.6"

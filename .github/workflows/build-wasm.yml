@@ -1,0 +1,51 @@
+# Builds the Rust solver into WebAssembly and commits the compiled output
+# back into the repo, so `frontend/` can be developed and built with only
+# Node installed -- no Rust/wasm-pack needed on your machine.
+#
+# This runs on GitHub's own servers, which (unlike some sandboxed dev
+# environments) have normal unrestricted internet access, so the
+# `rustup target add wasm32-unknown-unknown` step below just works.
+
+name: Build WASM solver
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "solver-core/**"
+      - ".github/workflows/build-wasm.yml"
+  workflow_dispatch: {} # lets you trigger it manually from the Actions tab
+
+# The commit-back step needs permission to push to the repo.
+permissions:
+  contents: write
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Run solver unit/integration tests
+        working-directory: solver-core
+        run: cargo test
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build WASM package
+        working-directory: solver-core
+        run: wasm-pack build --target web --out-dir ../frontend/lib/wasm --out-name solver_core
+
+      - name: Commit compiled output back to the repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add frontend/lib/wasm
+          git diff --staged --quiet || git commit -m "chore: rebuild WASM solver [skip ci]"
+          git push
